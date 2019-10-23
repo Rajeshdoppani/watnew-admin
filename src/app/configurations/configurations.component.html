@@ -1,0 +1,261 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for configuration">
+        </mat-form-field>
+      </div>
+
+      <!-- Configurations Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> S.No </mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+
+          <!-- Type -->
+          <ng-container matColumnDef="type">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Type</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.type}} </mat-cell>
+          </ng-container>
+
+          <!-- Min Amount -->
+          <ng-container matColumnDef="min_amount">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Min Amount </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{(row.type == 'Refer Friend' || row.type == 'Time Spend Amount' || row.type == 'Merchant Post Reward') ? row.min_amount : 'NA'}} </mat-cell>
+          </ng-container>
+
+          <!-- Max Amount -->
+          <ng-container matColumnDef="max_amount">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Max Amount </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{(row.type == 'Refer Friend' || row.type == 'Time Spend Amount' || row.type == 'Merchant Post Reward') ? row.max_amount : 'NA'}}</mat-cell>
+          </ng-container>
+
+          <!-- Adds Position -->
+          <ng-container matColumnDef="adds_position">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Adds Position </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{(row.type == 'Post Adds' || row.type == 'Live Adds') ? row.adds_position : 'NA'}}</mat-cell>
+          </ng-container>
+          
+          <!-- Duration -->
+          <ng-container matColumnDef="duration">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Duration </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.type == 'User Time Spent' ? row.duration : 'NA'}}</mat-cell>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.status == 1 ? 'Enabled' : 'Disabled'}}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewConfigDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[10, 20, 50, 100]"></mat-paginator>
+      </div>
+
+      <!-- Refer & Time Details Modal -->
+      <div class="modal fade" id="referTimeDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Configurations</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="referTimeDetailsForm">
+                <!-- Configuration Type -->
+                <mat-form-field name="type">
+                  <input matInput type="number" placeholder="Configuration Type" formControlName="type" required>
+                  <mat-error *ngIf="!referTimeDetailsForm.controls['type'].valid && referTimeDetailsForm.controls['type'].touched">Configuration type is required</mat-error>
+                </mat-form-field>
+                <!-- Minimum Amount -->
+                <mat-form-field name="min_amount">
+                  <input matInput type="number" placeholder="Minimum Amount" formControlName="min_amount" required>
+                  <mat-error *ngIf="!referTimeDetailsForm.controls['min_amount'].valid && referTimeDetailsForm.controls['min_amount'].touched">Min amount is required</mat-error>
+                </mat-form-field>
+                  <!-- Maximum Amount -->
+                <mat-form-field name="max_amount">
+                  <input matInput placeholder="Maximum Amount" formControlName="max_amount" required>
+                  <mat-error *ngIf="!referTimeDetailsForm.controls['max_amount'].valid && referTimeDetailsForm.controls['max_amount'].touched">Max amount is required</mat-error>
+                </mat-form-field>
+                <!-- Configuration Status -->
+                <mat-form-field name="status">
+                  <mat-select placeholder="Configuration Status" formControlName="status" required>
+                    <mat-option>Select Status</mat-option>
+                    <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="!referTimeDetailsForm.controls['status'].valid && referTimeDetailsForm.controls['status'].touched">Select configuration status</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!referTimeDetailsForm.valid" (click)="updateReferTimeDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post & Live Adds Config Details Modal -->
+      <div class="modal fade" id="addConfigDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Configurations</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="addConfigDetailsForm">
+                <!-- Configuration Type -->
+                <mat-form-field name="type">
+                  <input matInput placeholder="Configuration Type" formControlName="type" required>
+                  <mat-error *ngIf="!addConfigDetailsForm.controls['type'].valid && addConfigDetailsForm.controls['type'].touched">Configuration type is required</mat-error>
+                </mat-form-field>
+                <!-- Add Position -->
+                <mat-form-field name="adds_position">
+                  <input matInput type="number" placeholder="Add Position" formControlName="adds_position" required>
+                  <mat-error *ngIf="!addConfigDetailsForm.controls['adds_position'].valid && addConfigDetailsForm.controls['adds_position'].touched">Add position is required</mat-error>
+                </mat-form-field>
+                <!-- Configuration Status -->
+                <mat-form-field name="status">
+                  <mat-select placeholder="Configuration Status" formControlName="status" required>
+                    <mat-option>Select Status</mat-option>
+                    <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="!addConfigDetailsForm.controls['status'].valid && addConfigDetailsForm.controls['status'].touched">Select configuration status</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!addConfigDetailsForm.valid" (click)="updateaddConfigDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refer & Time Details Modal -->
+      <div class="modal fade" id="usageTimeDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Configurations</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="usageTimeDetailsForm">
+                <!-- Configuration Type -->
+                <mat-form-field name="type">
+                  <input matInput placeholder="Configuration Type" formControlName="type" required>
+                  <mat-error *ngIf="!usageTimeDetailsForm.controls['type'].valid && usageTimeDetailsForm.controls['type'].touched">Configuration type is required</mat-error>
+                </mat-form-field>
+                <!-- Duration -->
+                <mat-form-field name="duration">
+                  <input matInput type="number" placeholder="Usage Time" formControlName="duration" required>
+                  <mat-error *ngIf="!usageTimeDetailsForm.controls['duration'].valid && usageTimeDetailsForm.controls['duration'].touched">Duration is required</mat-error>
+                </mat-form-field>
+                <!-- Configuration Status -->
+                <mat-form-field name="status">
+                  <mat-select placeholder="Configuration Status" formControlName="status" required>
+                    <mat-option>Select Status</mat-option>
+                    <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="!usageTimeDetailsForm.controls['status'].valid && usageTimeDetailsForm.controls['status'].touched">Select configuration status</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!usageTimeDetailsForm.valid" (click)="updateUsageTimeDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scratch Card Status Modal -->
+      <div class="modal fade" id="scratchCardStatusModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Configurations</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="scratchCardsStatusForm">
+                <!-- Configuration Type -->
+                <mat-form-field name="type">
+                  <input matInput placeholder="Configuration Type" formControlName="type" required>
+                  <mat-error *ngIf="!scratchCardsStatusForm.controls['type'].valid && scratchCardsStatusForm.controls['type'].touched">Configuration type is required</mat-error>
+                </mat-form-field>
+                <!-- Configuration Status -->
+                <mat-form-field name="status">
+                  <mat-select placeholder="Configuration Status" formControlName="status" required>
+                    <mat-option>Select Status</mat-option>
+                    <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="!scratchCardsStatusForm.controls['status'].valid && scratchCardsStatusForm.controls['status'].touched">Select configuration status</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!scratchCardsStatusForm.valid" (click)="updateScratchCardStatusDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

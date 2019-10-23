@@ -1,0 +1,90 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for User">
+        </mat-form-field>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> S.No </mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+
+          <!-- User Name -->
+          <ng-container matColumnDef="nick_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> User Name </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.nick_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Mobile Number -->
+          <ng-container matColumnDef="mobile">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Mobile </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.mobile}} </mat-cell>
+          </ng-container>
+
+          <!-- Amount -->
+          <ng-container matColumnDef="amount">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Amount </mat-header-cell>
+            <mat-cell *matCellDef="let row"> Rs. {{row.amount}} </mat-cell>
+          </ng-container>
+          
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewUserDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[50, 100, 250, 500, 1000]"></mat-paginator>
+      </div>
+
+      <!-- View User Details Modal-->
+      <div id="userDetailsModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">User Details</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="userDetailsForm">
+                <!-- User Name -->
+                <mat-form-field name="nick_name">
+                  <input matInput placeholder="User Name" formControlName="nick_name">
+                  <mat-error *ngIf="!userDetailsForm.controls['nick_name'].valid && userDetailsForm.controls['nick_name'].touched">Enter user name</mat-error>
+                </mat-form-field>
+                <!-- Mobile Number -->
+                <mat-form-field name="mobile">
+                  <input matInput placeholder="Mobile Number" formControlName="mobile">
+                  <mat-error *ngIf="!userDetailsForm.controls['mobile'].valid && userDetailsForm.controls['mobile'].touched">Enter user mobile number</mat-error>
+                </mat-form-field>
+                <!-- Amount -->
+                <mat-form-field name="nick_name">
+                  <input matInput placeholder="Amount" formControlName="amount">
+                  <mat-error *ngIf="!userDetailsForm.controls['amount'].valid && userDetailsForm.controls['amount'].touched">Enter amount earned</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

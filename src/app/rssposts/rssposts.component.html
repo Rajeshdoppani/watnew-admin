@@ -1,0 +1,338 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-12 col-md-3 col-lg-3">
+        <mat-form-field>
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for RSS Post">
+        </mat-form-field>
+      </div>
+
+      <!-- Get Post Based On Categories Form -->
+      <form class="example-form" [formGroup]="fetchPostsForm">
+        <div class="row">
+          <div class="col-xs-12 col-md-5 col-lg-5">
+            <mat-form-field name="posts[0][category_id]">
+              <mat-select placeholder="Select Category" formControlName="posts[0][category_id]" required (selectionChange)="onCategoryChange(fetchPostsForm.controls['posts[0][category_id]'].value)">
+                <mat-option>Select Category</mat-option>
+                <mat-option *ngFor="let category of categoryData" [value]="category.id">{{category.category_name}}</mat-option>
+              </mat-select>
+              <mat-error *ngIf="!fetchPostsForm.controls['posts[0][category_id]'].valid && fetchPostsForm.controls['posts[0][category_id]'].touched">Category is required</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="col-xs-12 col-md-5 col-lg-5">
+            <mat-form-field name="posts[0][subcategory_id]">
+              <mat-select placeholder="Select Sub Category" formControlName="posts[0][subcategory_id]" required>
+                <mat-option>Select Category</mat-option>
+                <mat-option *ngFor="let subCat of subCategoryData" [value]="subCat.id">{{subCat.category_name}}</mat-option>
+              </mat-select>
+              <mat-error *ngIf="!fetchPostsForm.controls['posts[0][subcategory_id]'].valid && fetchPostsForm.controls['posts[0][subcategory_id]'].touched">Sub Category is required</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="col-xs-12 col-md-2 col-lg-2">
+            <button mat-raised-button color="primary" [disabled]="!fetchPostsForm.valid" class="cat-button" (click)="getAllPosts()">Fetch</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>S.No</mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+          <!-- Title -->
+          <ng-container matColumnDef="title">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Title</mat-header-cell>
+            <mat-cell *matCellDef="let row" title="{{row.title}}"> {{row.title}} </mat-cell>
+          </ng-container>
+
+          <!-- Name -->
+          <ng-container matColumnDef="name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.page.name}}</mat-cell>
+          </ng-container>
+
+          <!-- Cover Photo -->
+          <ng-container matColumnDef="page_header">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Cover Photo</mat-header-cell>
+            <mat-cell *matCellDef="let row"><img src="{{row.page.page_header}}" class="cat-image" ></mat-cell>
+          </ng-container>
+
+          <!-- Page Icon -->
+          <ng-container matColumnDef="page_icon">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Page Icon</mat-header-cell>
+            <mat-cell *matCellDef="let row"><img src="{{row.page.page_icon}}" class="cat-image" ></mat-cell>
+          </ng-container>
+          
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.page.status == '1' ? 'Enabled' : 'Disabled'}}</mat-cell>
+          </ng-container>
+
+          <!-- Post Comment Status -->
+          <ng-container matColumnDef="post_comment_status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Comments</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.post_comment_status == 'false' ? 'Enabled' : 'Disabled'}}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Actions</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewPostDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="viewPostImages(row.images)" title="View Post Images">
+                <mat-icon>photo_library</mat-icon>
+              </button>
+              <button mat-icon-button (click)="viewPostVideos(row.videos)" title="View Post Videos">
+                <mat-icon>video_library</mat-icon>
+              </button>
+              <button mat-icon-button (click)="enableOrDisableComments(row.id, row.post_comment_status)" title="Enable or disable comment">
+                <mat-icon>comment</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDelete(row)" title="Delete feed">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100, 250, 500, 1000]"></mat-paginator>
+      </div>
+
+      <!-- View RSS Posts Modal Popup -->
+      <div class="modal fade" id="viewPostDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">View/Update Post Details</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="postDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-4 col-lg-4">
+                    
+                    <!-- Post Name -->
+                    <mat-form-field name="name">
+                      <input matInput placeholder="Post name" formControlName="name" required>
+                      <mat-error *ngIf="!postDetailsForm.controls['name'].valid && postDetailsForm.controls['name'].touched">Enter post name</mat-error>
+                    </mat-form-field>
+
+                    <!-- Post Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Post Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!postDetailsForm.controls['status'].valid && postDetailsForm.controls['status'].touched">Select add status</mat-error>
+                    </mat-form-field>
+
+                    <!-- Post Updated On -->
+                    <mat-form-field name="updated_at">
+                      <input matInput placeholder="Post Updated On" formControlName="updated_at" required>
+                      <mat-error *ngIf="!postDetailsForm.controls['updated_at'].valid && postDetailsForm.controls['updated_at'].touched">Enter post updated on</mat-error>
+                    </mat-form-field>
+
+                    <!-- Post Created On -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Post Created On" formControlName="created_at" required>
+                      <mat-error *ngIf="!postDetailsForm.controls['created_at'].valid && postDetailsForm.controls['created_at'].touched">Enter post created on</mat-error>
+                    </mat-form-field>
+
+                    <!-- Posts Counts -->
+                    <label> Comment Count: </label><span> {{postDetailsForm.controls['postcomment_count'].value}}</span>
+                    <br>
+                    <label> Likes Count: </label><span> {{postDetailsForm.controls['postlikes_count'].value}}</span>
+                    <br>
+                    <label> Views Count: </label><span> {{postDetailsForm.controls['postviews_count'].value}}</span>
+                  </div>
+
+                  <div class="col-xs-12 col-md-8 col-lg-8">
+                    <!-- Post Title -->
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Post Title" formControlName="title" required>
+                      <mat-error *ngIf="!postDetailsForm.controls['title'].valid && postDetailsForm.controls['title'].touched">Enter post title</mat-error>
+                    </mat-form-field>
+
+                    <!-- Post Description -->
+                    <mat-form-field name="description">
+                      <input matInput placeholder="Post Description" formControlName="description" required>
+                      <mat-error *ngIf="!postDetailsForm.controls['description'].valid && postDetailsForm.controls['description'].touched">Enter post description</mat-error>
+                    </mat-form-field>
+
+                    <!-- Post Tags -->
+                    <mat-form-field name="tags">
+                      <input matInput placeholder="Post tags" formControlName="tags" required>
+                      <mat-error *ngIf="!postDetailsForm.controls['tags'].valid && postDetailsForm.controls['tags'].touched">Enter post tags</mat-error>
+                    </mat-form-field>
+                    <!-- Cover Photo & Page Icon -->
+                    <div class="row">
+                      <div class="col-xs-12 col-md-6 col-lg-6">
+                        <label> Cover Photo</label>
+                        <img src="{{postDetailsForm.controls['page_header'].value}}" style="width: 200px; height: 150px;">
+                      </div>
+                      <div class="col-xs-12 col-md-6 col-lg-6">
+                        <label>Page Icon</label>
+                        <img src="{{postDetailsForm.controls['page_icon'].value}}" style="width: 200px; height: 150px;">
+                      </div>
+                      <!-- Post Images Input -->
+                      <div>                      
+                        <span><b>Select Images </b></span>
+                        <input type="file" id="postImagesID" value="" accept="image/*" multiple (change)="imageFilesofPost($event.target.files)" required>
+                      </div>
+                      <br>
+                      <!-- Post Videos Input -->
+                      <div>
+                        <span><b>Select Videos </b></span>
+                        <input type="file" id="postVideosID" value="" accept="video/*" multiple (change)="videoFilesofPost($event.target.files)" required>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!postDetailsForm.valid" (click)="updatePostDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Post Images Modal -->
+      <div class="modal fade" id="viewPostImagesModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Images of Post</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form">
+                <div class="row">
+                  <div class="col-xs-12 col-md-4 col-lg-4" *ngFor="let image of postImagesList">
+                    <img src="{{image.path}}" style="width: 235px; height: 200px;"/>
+                    <button mat-raised-button color="warn" (click)="promptDeletePostImage(image)">Delete</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Post Videos Modal -->
+      <div class="modal fade" id="viewPostVideosModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Videos of Post</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form">
+                <div class="row">
+                  <div class="col-xs-12 col-md-4 col-lg-4" *ngFor="let video of postVideosList">
+                    <video width="300" height="200" *ngIf="video.status == 'false'">
+                      <source src="{{video.path}}">
+                    </video>
+                    <div [innerHtml]="video.path" *ngIf="video.status == 'true'"></div>
+                    <button mat-raised-button color="warn" (click)="promptDeletePostVideo(video)">Delete</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Post Modal Popup -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deletePost()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Post Image Or Video Modal -->
+      <div class="modal fade" id="confirmDeleteImageVideoModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deletePostImageOrVideo()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

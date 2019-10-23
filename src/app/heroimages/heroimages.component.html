@@ -1,0 +1,249 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for Hero Image">
+        </mat-form-field>
+        <button mat-raised-button color="primary" class="cat-button" (click)="openHeroImagesCreateModal()">Create</button>
+      </div>
+
+      <!-- Hero Images Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- User Name -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>S.No</mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+          
+          <!-- Email -->
+          <ng-container matColumnDef="title">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Title</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.title}} </mat-cell>
+          </ng-container>
+
+          <!-- Mobile Number -->
+          <ng-container matColumnDef="hero_image">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Image</mat-header-cell>
+            <mat-cell *matCellDef="let row"> <img src="{{row.hero_image}}" class="cat-image" /> </mat-cell>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.status == '1' ? 'Enabled' : 'Disabled'}} </mat-cell>
+          </ng-container>
+
+          <!-- Created On -->
+          <ng-container matColumnDef="created_at">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Created On</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.created_at}} </mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Actions</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewHeroImageDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDeleteHeroImage(row)" title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100]"></mat-paginator>
+      </div>
+
+      <!-- Add Hero Image Modal -->
+      <div class="modal fade" id="createHeroImageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Create Hero Image</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="createHeroImageForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Hero Image Title -->
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Hero Image Title" formControlName="title">
+                      <mat-error *ngIf="!createHeroImageForm.controls['title'].valid && createHeroImageForm.controls['title'].touched">Enter hero image title</mat-error>
+                    </mat-form-field>
+                    <!-- Hero Image Description -->
+                    <mat-form-field name="description">
+                      <input matInput placeholder="Hero Image Description" formControlName="description">
+                      <mat-error *ngIf="!createHeroImageForm.controls['description'].valid && createHeroImageForm.controls['description'].touched">Enter hero image description</mat-error>
+                    </mat-form-field>
+                    <!-- Hero Image URL -->
+                    <mat-form-field name="url">
+                      <input matInput placeholder="Hero Image URL" formControlName="url">
+                      <mat-error *ngIf="!createHeroImageForm.controls['url'].valid && createHeroImageForm.controls['url'].touched">Enter hero image url</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Hero Image Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Hero Image Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!createHeroImageForm.controls['status'].valid && createHeroImageForm.controls['status'].touched">Select hero image status</mat-error>
+                    </mat-form-field>
+                    <!-- Hero Image -->
+                    <div name="hero_image">
+                      <label>Select Hero Image *</label>
+                      <input type="file" id="heroImageFileId" accept="image/*" formControlName="hero_image" (change)="imageInputFileAtAdd($event.target.files)" required>
+                      <label><b>Note:</b> Image Width: 1200PX, Height: 280PX</label>
+                    </div>
+                    <br>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!createHeroImageForm.valid" (click)="createHeroImage()">Create</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View or Update Hero Image Details Modal -->
+      <div class="modal fade" id="heroImageDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">View or Update Hero Image</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <div class="heroImage">
+                  <img src="{{heroImageDetailsForm.controls['hero_image_url'].value}}" />
+              </div>
+              <form class="example-form" [formGroup]="heroImageDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Hero Image Title -->
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Hero Image Title" formControlName="title">
+                      <mat-error *ngIf="!heroImageDetailsForm.controls['title'].valid && heroImageDetailsForm.controls['title'].touched">Enter hero image title</mat-error>
+                    </mat-form-field>
+                    <!-- Hero Image Description -->
+                    <mat-form-field name="description">
+                      <input matInput placeholder="Hero Image Description" formControlName="description">
+                      <mat-error *ngIf="!heroImageDetailsForm.controls['description'].valid && heroImageDetailsForm.controls['description'].touched">Enter hero image description</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Hero Iamage Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Hero Image Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!heroImageDetailsForm.controls['status'].valid && heroImageDetailsForm.controls['status'].touched">Select hero image status</mat-error>
+                    </mat-form-field>
+                    <!-- Hero Image -->
+                    <div name="hero_image">
+                      <label>Select Hero Image</label>
+                      <input type="file" id="heroImageFileId" accept="image/*" formControlName="hero_image" (change)="imageInputFileAtUpdate($event.target.files)">
+                      <label><b>Note:</b> Image Width: 1200PX, Height: 280PX</label>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Hero Image Created On -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Hero Image Created On" formControlName="created_at">
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Hero Image Updated On -->
+                    <mat-form-field name="updated_at">
+                      <input matInput placeholder="Hero Image Updated On" formControlName="updated_at">
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-12 col-lg-12">
+                    <!-- Hero Image URL -->
+                    <mat-form-field name="url">
+                      <input matInput placeholder="Hero Image URL" formControlName="url">
+                      <mat-error *ngIf="!heroImageDetailsForm.controls['url'].valid && heroImageDetailsForm.controls['url'].touched">Enter hero image url</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!heroImageDetailsForm.valid" (click)="updateHeroImage()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deleteHeroImage()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

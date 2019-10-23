@@ -1,0 +1,39 @@
+.category-search {
+    width: 100%;
+}
+.cat-search {
+    float: left;
+}
+.cat-button {
+    float: right;
+}
+.example-container {
+    width: 100% !important;
+}
+.mat-header-cell {
+    color: #fff;
+    background: #343a40c4;
+    font-weight: bold;
+}
+::ng-deep .cdk-overlay-container {
+    position: fixed; 
+    z-index: 9999;
+}
+.mat-column-sno {
+    flex: 0 0 60px;
+}
+.mat-column-email {
+    flex: 0 0 270px;
+}
+.modal-header{
+    background: #343a40c4 !important;
+    padding: 5px 10px !important;
+    border: 1px solid #343a40c4;
+    border-radius: 4px 4px 0 0;
+}
+ .modal-title{
+    color: #fff !important;
+}
+.modal-footer{
+    padding:10px;
+}

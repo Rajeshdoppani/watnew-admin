@@ -1,0 +1,270 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for Package">
+        </mat-form-field>
+        <button mat-raised-button color="primary" class="cat-button" (click)="openCreatePackageModal()">Create</button>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+
+          <!-- ID -->
+          <ng-container matColumnDef="id">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> ID </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.id}} </mat-cell>
+          </ng-container>
+
+          <!-- Package Type -->
+          <ng-container matColumnDef="subscription_type">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Subscription Type </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.subscription_type}} </mat-cell>
+          </ng-container>
+
+          <!-- Duration-->
+          <ng-container matColumnDef="duration">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Duration </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.duration}} </mat-cell>
+          </ng-container>
+
+          <!-- Description-->
+          <ng-container matColumnDef="description">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Description </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.description}} </mat-cell>
+          </ng-container>
+
+          <!-- Amount-->
+          <ng-container matColumnDef="amount">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Amount </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.amount}} </mat-cell>
+          </ng-container>
+
+          <!-- Description -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.status == '1' ? 'Enabled' : 'Disabled' }}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewpackageDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDeletePackage(row)" title="Delete Package">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+      </div>
+
+
+      <!-- Add Packages Modal Popup -->
+      <div id="addPackageModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Create Package</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="addPackageForm">
+                <!--Package Type-->
+                <mat-form-field name="subscription_type">
+                  <mat-select placeholder="Select Package" formControlName="subscription_type" required>
+                    <mat-option>Select Package</mat-option>
+                    <mat-option *ngFor="let data of packageList" [value]="data.name">{{data.name}}</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="!addPackageForm.controls['subscription_type'].valid && addPackageForm.controls['subscription_type'].touched">
+                    Select Package</mat-error>
+                </mat-form-field>
+
+                <!--Duration-->
+                <mat-form-field name="duration">
+                  <input matInput placeholder="Duration" formControlName="duration" required>
+                  <mat-error
+                    *ngIf="!addPackageForm.controls['duration'].valid && addPackageForm.controls['duration'].touched">
+                    Enter Duration</mat-error>
+                </mat-form-field>
+
+                <!--Description-->
+                <mat-form-field name="description">
+                  <textarea matInput placeholder="Description" formControlName="description" required></textarea>
+                  <mat-error
+                    *ngIf="!addPackageForm.controls['description'].valid && addPackageForm.controls['description'].touched">
+                    Enter Description</mat-error>
+                </mat-form-field>
+
+                <!--Amount-->
+                <mat-form-field name="amount">
+                  <input matInput placeholder="Amount" formControlName="amount" required>
+                  <mat-error
+                    *ngIf="!addPackageForm.controls['amount'].valid && addPackageForm.controls['amount'].touched">
+                    Enter Amount</mat-error>
+                </mat-form-field>
+
+                <!--Status-->
+                <mat-form-field name="status">
+                  <mat-select placeholder="Select Status" formControlName="status" required>
+                    <mat-option>Select Status</mat-option>
+                    <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="!addPackageForm.controls['status'].valid && addPackageForm.controls['status'].touched">
+                    Select status</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!addPackageForm.valid"
+                (click)="addPackage()" data-dismiss="modal">Create</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View or Update Packages Modal-->
+      <div id="viewPackageModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View/Update Package</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-xs-12 col-md-6 col-lg-6">
+                  <form class="example-form" [formGroup]="updatePackageForm">
+                    <!--Package Type-->
+                    <mat-form-field name="subscription_type">
+                      <mat-select placeholder="Select Package" formControlName="subscription_type" required>
+                        <mat-option>Select Package</mat-option>
+                        <mat-option *ngFor="let data of packageList" [value]="data.name">{{data.name}}</mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!updatePackageForm.controls['subscription_type'].valid && updatePackageForm.controls['subscription_type'].touched">
+                        Select Package</mat-error>
+                    </mat-form-field>
+
+                    <!--Duration-->
+                    <mat-form-field name="duration">
+                      <input matInput placeholder="Duration" formControlName="duration" required>
+                      <mat-error
+                        *ngIf="!updatePackageForm.controls['duration'].valid && updatePackageForm.controls['duration'].touched">
+                        Enter Duration</mat-error>
+                    </mat-form-field>
+
+                    <!--Description-->
+                    <mat-form-field name="description">
+                      <textarea matInput placeholder="Description" formControlName="description" required></textarea>
+                      <mat-error
+                        *ngIf="!updatePackageForm.controls['description'].valid && updatePackageForm.controls['description'].touched">
+                        Enter Description</mat-error>
+                    </mat-form-field>
+
+                    <!--Amount-->
+                    <mat-form-field name="amount">
+                      <input matInput placeholder="Amount" formControlName="amount" required>
+                      <mat-error
+                        *ngIf="!updatePackageForm.controls['amount'].valid && updatePackageForm.controls['amount'].touched">
+                        Enter Amount</mat-error>
+                    </mat-form-field>
+
+                    <!--Status-->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Select Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!updatePackageForm.controls['status'].valid && updatePackageForm.controls['status'].touched">
+                        Select status</mat-error>
+                    </mat-form-field>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!updatePackageForm.valid"
+                (click)="updatePackage()" data-dismiss="modal">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete category and
+                  related data...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deletePackage()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

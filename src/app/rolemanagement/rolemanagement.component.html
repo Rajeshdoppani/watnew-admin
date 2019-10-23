@@ -1,0 +1,103 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for role">
+        </mat-form-field>
+        <button mat-raised-button color="primary" class="cat-button" (click)="openRolesAssignModal()">Assign</button>
+      </div>
+
+      <!-- Assign Permissions to RoleassignPrmissionModal Modal Popup -->
+      <div id="assignPrmissionModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Assign Permissions</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="assignPrmissionForm">
+                <!-- Select Role -->
+                <mat-form-field name="role_id">
+                  <mat-select placeholder="Select Role" formControlName="role_id" required>
+                    <mat-option>Select Role</mat-option>
+                    <mat-option *ngFor="let role of rolesList" [value]="role.id">{{role.name}}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="!assignPrmissionForm.controls['role_id'].valid && assignPrmissionForm.controls['role_id'].touched">Select role type</mat-error>
+                </mat-form-field>
+                <!-- Select Pemissions -->
+                <mat-form-field name="permission_id">
+                  <mat-select placeholder="Select Permissions" formControlName="permission_id" multiple>
+                    <mat-option *ngFor="let permission of permissionsList" [value]="permission.id">{{permission.name}}</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="!assignPrmissionForm.controls['permission_id'].valid && assignPrmissionForm.controls['permission_id'].touched">Select permission types</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!assignPrmissionForm.valid" (click)="assignPermissions()" data-dismiss="modal">Assign</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete category and related data...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <!-- <button type="button" mat-raised-button color="warn" (click)="deleteCategory()">Yes</button> -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

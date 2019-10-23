@@ -1,0 +1,498 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-12 col-md-3 col-lg-3">
+        <mat-form-field>
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for feed">
+        </mat-form-field>
+      </div>
+      <div class="col-xs-12 col-md-6 col-lg-6">
+        <!-- Get Feeds Based On Categories -->
+        <form class="example-form" [formGroup]="fetchFeedsForm">
+          <div class="row">
+            <div class="col-xs-12 col-md-5 col-lg-5">
+              <mat-form-field name="category_id">
+                <mat-select placeholder="Select Category" formControlName="category_id" required
+                  (selectionChange)="onFeedCategoryChange(fetchFeedsForm.controls['category_id'].value)">
+                  <mat-option>Select Category</mat-option>
+                  <mat-option *ngFor="let category of feedCategoryData" [value]="category.id">{{category.category_name}}
+                  </mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="!fetchFeedsForm.controls['category_id'].valid && fetchFeedsForm.controls['category_id'].touched">
+                  Category is required</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-xs-12 col-md-5 col-lg-5">
+              <mat-form-field name="subcategory_id">
+                <mat-select placeholder="Select Sub Category" formControlName="subcategory_id" required
+                  [disabled]="!fetchFeedsForm.controls['category_id'].valid">
+                  <mat-option>Select Sub Category</mat-option>
+                  <mat-option *ngFor="let subCat of feedSubCategoryData" [value]="subCat.id">{{subCat.category_name}}
+                  </mat-option>
+                </mat-select>
+                <mat-error
+                  *ngIf="!fetchFeedsForm.controls['subcategory_id'].valid && fetchFeedsForm.controls['subcategory_id'].touched">
+                  Sub Category is required</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-xs-12 col-md-2 col-lg-2">
+              <button mat-raised-button color="primary" [disabled]="!fetchFeedsForm.valid" class="cat-button"
+                (click)="getFeedsByCategories()">Fetch</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="col-xs-12 col-md-3 col-lg-3">
+        <button mat-raised-button color="primary" class="cat-button" (click)="openCreateFeedModal()">Add Feed</button>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>S.No</mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}}
+            </mat-cell>
+          </ng-container>
+
+          <!-- Feed Id -->
+          <ng-container matColumnDef="id">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Feed Id</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.id}} </mat-cell>
+          </ng-container>
+
+          <!-- Page Id -->
+          <ng-container matColumnDef="page_id">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Page Id</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.page_id}} </mat-cell>
+          </ng-container>
+
+          <!-- Category Name -->
+          <ng-container matColumnDef="category_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Category</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.category_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Subcategory Name -->
+          <ng-container matColumnDef="subcategory_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Sub category</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.subcategory_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Feed Title -->
+          <ng-container matColumnDef="name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Title</mat-header-cell>
+            <mat-cell *matCellDef="let row" title="{{row.name}}"> {{row.name}} </mat-cell>
+          </ng-container>
+
+          <!-- Feed URL -->
+          <ng-container matColumnDef="url">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Feed URL</mat-header-cell>
+            <mat-cell *matCellDef="let row" title="{{row.url}}"> {{row.url}} </mat-cell>
+          </ng-container>
+
+          <!-- Schedule Time -->
+          <ng-container matColumnDef="schedule_time">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Schedule Time</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.schedule_time}} </mat-cell>
+          </ng-container>
+
+          <!-- Source -->
+          <ng-container matColumnDef="source">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Source</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.source == null ? 'NA' : row.source}} </mat-cell>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.status == '1' ? 'Enabled' : 'Disabled'}} </mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Actions</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewFeedDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDelete(row)" title="Delete feed">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100, 250, 500, 1000]"></mat-paginator>
+      </div>
+
+      <!-- Add Feed Modal Popup -->
+      <div id="addFeedModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Add Feed</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="addFeedForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="category_id">
+                      <mat-select placeholder="Select Category" formControlName="category_id" required
+                        (selectionChange)="onCategoryChange(addFeedForm.controls['category_id'].value)">
+                        <mat-option>Select Category</mat-option>
+                        <mat-option *ngFor="let category of categoryData" [value]="category.id">
+                          {{category.category_name}}</mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['category_id'].valid && addFeedForm.controls['category_id'].touched">
+                        Category is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="sub_category_id">
+                      <mat-select placeholder="Select Sub Category" formControlName="sub_category_id" required
+                        [disabled]="!addFeedForm.controls['category_id'].valid">
+                        <mat-option>Select Category</mat-option>
+                        <mat-option *ngFor="let subcat of subCategoryData" [value]="subcat.id">{{subcat.category_name}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['sub_category_id'].valid && addFeedForm.controls['sub_category_id'].touched">
+                        Sub Category is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-1 col-lg-1">
+                    <mat-form-field name="feedTitle">
+                      <input matInput placeholder="Feed Title" formControlName="feedTitle" required>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['feedTitle'].valid && addFeedForm.controls['feedTitle'].touched">
+                        Enter feed title</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-2 col-lg-2">
+                    <mat-form-field name="feedURL">
+                      <input matInput placeholder="Feed URL" formControlName="feedURL" required>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['feedURL'].valid && addFeedForm.controls['feedURL'].touched">Enter
+                        feed url</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-1 col-lg-1">
+                    <mat-form-field name="feedTime">
+                      <mat-select placeholder="Time" formControlName="feedTime" required>
+                        <mat-option>Select Time</mat-option>
+                        <mat-option *ngFor="let time of schedulerTimes" [value]="time.id">{{time.feed_time}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['feedTime'].valid && addFeedForm.controls['feedTime'].touched">
+                        Select feed time</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-1 col-lg-1">
+                    <mat-form-field name="is_celebrity">
+                      <mat-select placeholder="Is Celebrity" formControlName="is_celebrity" required>
+                        <mat-option>Select Celebrity</mat-option>
+                        <mat-option *ngFor="let celebrity of celebrityList" [value]="celebrity.id">{{celebrity.name}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['is_celebrity'].valid && addFeedForm.controls['is_celebrity'].touched">
+                        Select feed is celebrity</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-1 col-lg-1">
+                    <mat-form-field name="feedStatus">
+                      <mat-select placeholder="Status" formControlName="feedStatus" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['feedStatus'].valid && addFeedForm.controls['feedStatus'].touched">
+                        Select feed status</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-1 col-lg-1">
+                    <mat-form-field name="source">
+                      <input matInput placeholder="Feed Source" formControlName="source" required>
+                      <mat-error
+                        *ngIf="!addFeedForm.controls['source'].valid && addFeedForm.controls['source'].touched">Source
+                        is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-2 col-lg-2">
+                    <span><b>Cover Photo</b></span>
+                    <input type="file" id="addCoverPhotoID" value="" accept="image/*"
+                      (change)="coverPhotoAtAdd($event.target.files)" required>
+                  </div>
+                  <div class="col-xs-12 col-md-2 col-lg-2">
+                    <span><b>Page Icon</b></span>
+                    <input type="file" id="addPageIconID" accept="image/*" (change)="pageIconAtAdd($event.target.files)"
+                      required>
+                  </div>
+                  <div class="col-xs-12 col-md-1 col-lg-1">
+                    <button mat-icon-button color="default"
+                      [disabled]="!addFeedForm.controls['feedTitle'].valid || !addFeedForm.controls['feedURL'].valid || !addFeedForm.controls['feedStatus'].valid || !addFeedForm.controls['feedTime'].valid"
+                      (click)="pushFeed()">
+                      <mat-icon>add_circle_outline</mat-icon>
+                    </button>
+                  </div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead class=" text-primary">
+                      <th>Title</th>
+                      <th>URL</th>
+                      <th>Feed Time</th>
+                      <th>Is Celebrity</th>
+                      <th>Status</th>
+                      <th>Source</th>
+                      <th>Cover Photo</th>
+                      <th>Page Icon</th>
+                      <th>Action</th>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let feed of feedsList; let i = index;">
+                        <td>{{feed.title}}</td>
+                        <td>{{feed.url}}</td>
+                        <td>
+                          {{feed.time == '1' ? 'Every Minute' : feed.time == '2' ? 'Every Five Minutes' : feed.time == '3' ? 'Every Ten Minutes' : feed.time == '4' ? 'Every Fifteen Minutes' : feed.time == '5' ? 'Every Thirty Minutes' : feed.time == '6' ? 'Hourly' : feed.time == '7' ? 'Hourly At' : feed.time == '8' ? 'Daily' : feed.time == '9' ? 'Daily At' : feed.time == '10' ? 'Twice Daily' : feed.time == '11' ? 'Weekly' : feed.time == '12' ? 'Weekly On' : feed.time == '13' ? 'Monthly' : feed.time == '14' ? 'Monthly On' : feed.time == '15' ? 'Quarterly' : 'Yearly' }}
+                        </td>
+                        <td>{{feed.is_celebrity == '1' ? 'Yes' : 'NO' }}</td>
+                        <td>{{feed.status == '1' ? 'Enabled' : 'Disabled'}}</td>
+                        <td>{{feed.source}}</td>
+                        <td>{{feed.coverPhoto}}</td>
+                        <td>{{feed.pageIcon}}</td>
+                        <td><button mat-icon-button color="default" (click)="sliceFeed(i)">
+                            <mat-icon>remove_circle_outline</mat-icon>
+                          </button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary"
+                [disabled]="!addFeedForm.controls['category_id'].valid || !addFeedForm.controls['sub_category_id'].valid"
+                (click)="addFeeds()">Add</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Feed Details Modal Popup -->
+      <div class="modal fade" id="viewfeedsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">View/Update Feed Details</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="viewFeedForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <div class="row">
+                      <!-- Cover Photo Image -->
+                      <div class="col-xs-12 col-md-6 col-lg-6">
+                        <label>Cover Photo</label>
+                        <img src="{{coverPhotoPath}}" style="width: 100%; height: 105px;" />
+                      </div>
+                      <!-- Page Icon Image -->
+                      <div class="col-xs-12 col-md-6 col-lg-6">
+                        <label>Page Icon</label>
+                        <img src="{{pageIconPath}}" style="width: 100%; height: 105px;" />
+                      </div>
+                    </div>
+                    <div>
+                      <!-- Category Name -->
+                      <mat-form-field name="category_name">
+                        <input matInput placeholder="Category" formControlName="category_name" required>
+                        <mat-error
+                          *ngIf="!viewFeedForm.controls['category_name'].valid && viewFeedForm.controls['category_name'].touched">
+                          Category is required</mat-error>
+                      </mat-form-field>
+
+                      <!-- Sub Category Name -->
+                      <mat-form-field name="sub_category_name">
+                        <input matInput placeholder="Sub Category" formControlName="sub_category_name" required>
+                        <mat-error
+                          *ngIf="!viewFeedForm.controls['sub_category_name'].valid && viewFeedForm.controls['sub_category_name'].touched">
+                          Sub Category is required</mat-error>
+                      </mat-form-field>
+
+                      <!-- Feed Title -->
+                      <mat-form-field name="feedTitle">
+                        <input matInput placeholder="Feed Title" formControlName="feedTitle" required>
+                        <mat-error
+                          *ngIf="!viewFeedForm.controls['feedTitle'].valid && viewFeedForm.controls['feedTitle'].touched">
+                          Enter feed title</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Feed Source -->
+                    <mat-form-field name="source">
+                      <input matInput placeholder="Feed Source" formControlName="source" required>
+                      <mat-error
+                        *ngIf="!viewFeedForm.controls['source'].valid && viewFeedForm.controls['source'].touched">Enter
+                        feed source</mat-error>
+                    </mat-form-field>
+
+                    <!-- Feed Status -->
+                    <mat-form-field name="feedStatus">
+                      <mat-select placeholder="Select Status" formControlName="feedStatus" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!viewFeedForm.controls['feedStatus'].valid && viewFeedForm.controls['feedStatus'].touched">
+                        Feed status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Feed Is Celebrity -->
+                    <mat-form-field name="is_celebrity">
+                      <mat-select placeholder="Is Celebrity" formControlName="is_celebrity" required>
+                        <mat-option>Select Is Celebrity</mat-option>
+                        <mat-option *ngFor="let celebrity of celebrityList" [value]="celebrity.id">{{celebrity.name}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!viewFeedForm.controls['is_celebrity'].valid && viewFeedForm.controls['is_celebrity'].touched">
+                        Feed Is Celebrity is required</mat-error>
+                    </mat-form-field>
+
+                    <!-- Feed Scheduer Time -->
+                    <mat-form-field name="feedTime">
+                      <mat-select placeholder="Feed Time" formControlName="feedTime" required>
+                        <mat-option>Select Feed Time</mat-option>
+                        <mat-option *ngFor="let time of schedulerTimes" [value]="time.id">{{time.feed_time}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!viewFeedForm.controls['feedTime'].valid && viewFeedForm.controls['feedTime'].touched">
+                        Feed status is required</mat-error>
+                    </mat-form-field>
+
+                    <!-- Feed Created On -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Created On" formControlName="created_at" required>
+                      <mat-error
+                        *ngIf="!viewFeedForm.controls['created_at'].valid && viewFeedForm.controls['created_at'].touched">
+                        Enter created time</mat-error>
+                    </mat-form-field>
+
+                    <!-- Feed Updates On -->
+                    <mat-form-field name="source">
+                      <input matInput placeholder="Updated On" formControlName="updated_at" required>
+                      <mat-error
+                        *ngIf="!viewFeedForm.controls['updated_at'].valid && viewFeedForm.controls['updated_at'].touched">
+                        Enter updated time</mat-error>
+                    </mat-form-field>
+
+                    <!-- Cover Photo Input -->
+                    <div>
+                      <span><b>Cover Photo</b></span>
+                      <input type="file" id="updateCoverPhotoID" value="" accept="image/*"
+                        (change)="coverPhotoAtUpdate($event.target.files)" required>
+                    </div>
+                    <!-- Page Icon Input -->
+                    <div>
+                      <span style="display: block; margin-top: 10px;"><b>Page Icon</b></span>
+                      <input type="file" id="updatePageIconID" value="" accept="image/*"
+                        (change)="pageIconAtUpdate($event.target.files)" required>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <!-- Feed URL -->
+                  <mat-form-field name="feedURL">
+                    <input matInput placeholder="Feed URL" formControlName="feedURL" required>
+                    <mat-error
+                      *ngIf="!viewFeedForm.controls['feedURL'].valid && viewFeedForm.controls['feedURL'].touched">Enter
+                      feed title</mat-error>
+                  </mat-form-field>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!viewFeedForm.valid"
+                (click)="updateFeedDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deleteFeed()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

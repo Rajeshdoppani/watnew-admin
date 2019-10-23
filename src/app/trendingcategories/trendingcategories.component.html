@@ -1,0 +1,138 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for Trending Categories">
+        </mat-form-field>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.NO -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> S.No</mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+
+          <!-- Category Name -->
+          <ng-container matColumnDef="category_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Category Name </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.category_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Category Image-->
+          <ng-container matColumnDef="image">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Image </mat-header-cell>
+            <mat-cell *matCellDef="let row"> <img src="{{row.image}}" class="cat-image" /></mat-cell>
+          </ng-container>
+
+          <!-- Category Name -->
+          <ng-container matColumnDef="cards_count">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Cards Count </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.cards_count}} </mat-cell>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.trending_category_status == '1' ? 'Enabled' : 'Disabled' }}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewTrendCategoryDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100, 250, 500, 1000]"></mat-paginator>
+      </div>
+
+      <!-- View or Update Category Modal-->
+      <div id="viewTrendCategoryModal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-md">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View/Update Trending Category</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="trendCategoryDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <img src="{{trendCategoryDetailsForm.controls['image'].value}}" style="width: 100%; height: 160px;"/>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Category Name -->
+                    <mat-form-field name="category_name">
+                      <input matInput placeholder="Category name" formControlName="category_name" required>
+                      <mat-error *ngIf="!trendCategoryDetailsForm.controls['category_name'].valid && trendCategoryDetailsForm.controls['category_name'].touched">Enter category name</mat-error>
+                    </mat-form-field>
+                    <!-- Category Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Category Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!trendCategoryDetailsForm.controls['status'].valid && trendCategoryDetailsForm.controls['status'].touched">Select category status</mat-error>
+                    </mat-form-field>
+                    <label>Content Cards Count:</label> {{trendCategoryDetailsForm.controls['cards_count'].value}}
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!trendCategoryDetailsForm.valid" (click)="updateTrendingCategory()" data-dismiss="modal">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

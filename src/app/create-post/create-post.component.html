@@ -1,0 +1,101 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Create Post Form -->
+      <form class="example-form" [formGroup]="createPostForm">
+        <div class="row">
+          <div class="col-xs-12 col-md-6 col-lg-6">
+            <!-- Post Title -->
+            <mat-form-field name="title">
+              <input matInput placeholder="Post Title" formControlName="title" required>
+              <mat-error *ngIf="!createPostForm.controls['title'].valid && createPostForm.controls['title'].touched">Enter post title</mat-error>
+            </mat-form-field>
+
+            <!-- Post Description -->
+            <mat-form-field name="description">
+              <input matInput placeholder="Post Description" formControlName="description" required>
+              <mat-error *ngIf="!createPostForm.controls['description'].valid && createPostForm.controls['description'].touched">Enter post description</mat-error>
+            </mat-form-field>
+
+            <!-- Youtube URLs -->
+            <mat-form-field name="externallink">
+              <input matInput placeholder="Youtube URL's" formControlName="externallink">
+              <mat-error *ngIf="!createPostForm.controls['externallink'].valid && createPostForm.controls['externallink'].touched">Enter youtube video url if any</mat-error>
+            </mat-form-field>
+
+          </div>
+          <div class="col-xs-12 col-md-6 col-lg-6">
+            <div>
+              <label>Schedule Post Date</label>
+              <angular2-date-picker formControlName="schedule_at" [settings]="settings"></angular2-date-picker>
+            </div>
+            <!-- Post Images -->
+            <div>
+              <label>Post Images *</label>
+              <input type="file" accept="image/*" multiple formControlName="post_images" (change)="postImagesAtAdd($event.target.files)" required>
+            </div>
+            <div>
+              <!-- Post Videos -->
+              <label>Post Videos </label>
+              <input type="file" accept="video/*" multiple formControlName="post_videos" (change)="postVideosAtAdd($event.target.files)">
+            </div>
+          </div>
+
+          <label>Categories *</label>
+          <p>Selected Categories : {{checkedKeys}}</p>
+
+          <kendo-treeview [nodes]="treeData"
+            textField="category_name"
+            [children]="children"
+            [kendoTreeViewCheckable]="checkableSettings"
+            childrenField="subcategories"
+            [(checkedKeys)]="checkedKeys"
+            [checkBy]="key" [isChecked]="isChecked"
+            [hasChildren]="hasChildren">
+          </kendo-treeview>
+        </div>
+        <div>
+          <button type="button" mat-raised-button color="primary" id="create-btn" [disabled]="!createPostForm.valid" (click)="createPost()">Create</button>
+        </div>
+      </form>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

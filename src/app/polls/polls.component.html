@@ -1,0 +1,421 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-12 col-md-3 col-lg-3">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for poll">
+        </mat-form-field>
+      </div>
+      <!-- Fetch Polls Form -->
+      <div class="col-xs-12 col-md-7 col-lg-7">
+        <form class="example-form" [formGroup]="fetchPollsForm">
+          <div class="row">
+            <div class="col-xs-12 col-md-5 col-lg-5">
+              <mat-form-field name="category_id">
+                <mat-select placeholder="Select Category" formControlName="category_id" required (selectionChange)="onPollCategoryChange(fetchPollsForm.controls['category_id'].value)">
+                  <mat-option>Select Category</mat-option>
+                  <mat-option *ngFor="let category of categoryData" [value]="category.id">{{category.category_name}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="!fetchPollsForm.controls['category_id'].valid && fetchPollsForm.controls['category_id'].touched">Category is required</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-xs-12 col-md-5 col-lg-5">
+              <mat-form-field name="subcategory_id">
+                <mat-select placeholder="Select Sub Category" formControlName="subcategory_id" [disabled]="!fetchPollsForm.controls['category_id'].valid" required>
+                  <mat-option>Select Sub Category</mat-option>
+                  <mat-option *ngFor="let subCat of subCategoryData" [value]="subCat.id">{{subCat.category_name}}</mat-option>
+                </mat-select>
+                <mat-error *ngIf="!fetchPollsForm.controls['subcategory_id'].valid && fetchPollsForm.controls['subcategory_id'].touched">Sub Category is required</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="col-xs-12 col-md-2 col-lg-2">
+              <button mat-raised-button color="primary" [disabled]="!fetchPollsForm.valid" class="cat-button" (click)="getPollsByCategories()">Fetch</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="col-xs-12 col-md-2 col-lg-2">
+        <button mat-raised-button color="primary" class="cat-button" (click)="openCreatePollModal()">Create</button>
+      </div>
+
+      <!-- Polls Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> S.No </mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+
+          <!-- Title -->
+          <ng-container matColumnDef="title">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Title</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.title}} </mat-cell>
+          </ng-container>
+
+          <!-- Type -->
+          <ng-container matColumnDef="type">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Poll Type</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.post_option_type == '1' ? 'Text Poll' : 'Image Poll'}} </mat-cell>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.status == '1' ? 'Enabled' : 'Disabled'}}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewPollDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmPollDelete(row)" title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100]"></mat-paginator>
+      </div>
+
+      <!-- Add Poll Modal -->
+      <div id="createPollModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Create Poll</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="createPollForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="categories[0][category_id]">
+                      <mat-select placeholder="Select Category" formControlName="categories[0][category_id]" (selectionChange)="onCategoryChange(createPollForm.controls['categories[0][category_id]'].value)" required>
+                        <mat-option>Select Category</mat-option>
+                        <mat-option *ngFor="let category of categoryData" [value]="category.id">{{category.category_name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!createPollForm.controls['categories[0][category_id]'].valid && createPollForm.controls['categories[0][category_id]'].touched">Category is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="subcategory_id">
+                      <mat-select placeholder="Select Sub Category" formControlName="subcategory_id" required>
+                        <mat-option>Select Sub Category</mat-option>
+                        <mat-option *ngFor="let subCat of subCategoryData" [value]="subCat.id">{{subCat.category_name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!createPollForm.controls['subcategory_id'].valid && createPollForm.controls['subcategory_id'].touched">Sub Category is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Poll title" formControlName="title" required>
+                      <mat-error *ngIf="!createPollForm.controls['title'].valid && createPollForm.controls['title'].touched">Poll title is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="poll_type">
+                      <mat-select placeholder="Select Poll Type" formControlName="poll_type" (selectionChange)="onPollTypeChange(createPollForm.controls['poll_type'].value)">
+                        <!-- <mat-option>Select poll type</mat-option> -->
+                        <mat-option *ngFor="let poll of pollTypes" [value]="poll.type">{{poll.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!createPollForm.controls['poll_type'].valid && createPollForm.controls['poll_type'].touched">Poll status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <!-- Text Options Start -->
+                <div class="row" *ngIf="createPollForm.controls['poll_type'].value == 'TEXT'">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="options[0][text]">
+                      <input matInput placeholder="Poll Option 1 *" formControlName="options[0][text]" >
+                      <mat-error *ngIf="!createPollForm.controls['options[0][text]'].valid && createPollForm.controls['options[0][text]'].touched">Poll option 1 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="options[1][text]">
+                      <input matInput placeholder="Poll Option 2 *" formControlName="options[1][text]" >
+                      <mat-error *ngIf="!createPollForm.controls['options[1][text]'].valid && createPollForm.controls['options[1][text]'].touched">Poll option 2 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <!--
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="options[2][text]">
+                      <input matInput placeholder="Poll Option 3" formControlName="options[2][text]" >
+                      <mat-error *ngIf="!createPollForm.controls['options[2][text]'].valid && createPollForm.controls['options[2][text]'].touched">Poll option 3 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="options[3][text]">
+                      <input matInput placeholder="Poll Option 4" formControlName="options[3][text]" >
+                      <mat-error *ngIf="!createPollForm.controls['options[3][text]'].valid && createPollForm.controls['options[3][text]'].touched">Poll option 4 is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  -->
+                </div>
+                <!-- Text Options End -->
+
+                <!-- Image Options Start -->
+                <div class="row" *ngIf="createPollForm.controls['poll_type'].value == 'IMAGE'">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Option1 Image *</label>
+                    <input type="file" accept="image/*" formControlName="options[0][image]" (change)="imageOption0Fun($event.target.files)" >
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Option2 Image *</label>
+                    <input type="file" accept="image/*" formControlName="options[1][image]" (change)="imageOption1Fun($event.target.files)" >
+                  </div>
+                </div>
+                <!--
+                <br>
+                <div class="row" *ngIf="createPollForm.controls['poll_type'].value == 'IMAGE'">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Option3 Image</label>
+                    <input type="file" accept="image/*" formControlName="options[2][image]" (change)="imageOption2Fun($event.target.files)" >
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Option4 Image</label>
+                    <input type="file" accept="image/*" formControlName="options[3][image]" (change)="imageOption3Fun($event.target.files)" >
+                  </div>
+                </div>
+                -->
+                <!-- Image Options End -->
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Poll End At</label>
+                    <angular2-date-picker formControlName="poll_end_at" [settings]="settings"></angular2-date-picker>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Select Poll Status" formControlName="status" required>
+                        <mat-option>Select status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!createPollForm.controls['status'].valid && createPollForm.controls['status'].touched">Poll status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!createPollForm.valid" (click)="createPoll()" data-dismiss="modal">Create</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Text Poll Details Modal Popup -->
+      <div id="viewTextPollDetailsModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View Poll Details</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="viewTextPollDetailsForm">
+                <div class="row">
+                  <!-- Poll Title -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Poll title" formControlName="title" required>
+                      <mat-error *ngIf="!viewTextPollDetailsForm.controls['title'].valid && viewTextPollDetailsForm.controls['title'].touched">Poll title is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <!-- Poll Type -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="post_option_type">
+                      <mat-select placeholder="Poll Type" formControlName="post_option_type">
+                        <mat-option *ngFor="let poll of pollRespTypes" [value]="poll.type">{{poll.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!viewTextPollDetailsForm.controls['post_option_type'].valid && viewTextPollDetailsForm.controls['post_option_type'].touched">Poll status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <!-- Poll End At -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="post_end_at">
+                      <input matInput placeholder="Poll End At" formControlName="post_end_at">
+                      <mat-error *ngIf="!viewTextPollDetailsForm.controls['post_end_at'].valid && viewTextPollDetailsForm.controls['post_end_at'].touched">Poll end at is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <!-- Poll Status -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Poll status" formControlName="status" required>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!viewTextPollDetailsForm.controls['status'].valid && viewTextPollDetailsForm.controls['status'].touched">Poll status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="option1Value">
+                      <input matInput placeholder="Poll Option 1" formControlName="option1Value" required>
+                      <mat-error *ngIf="!viewTextPollDetailsForm.controls['option1Value'].valid && viewTextPollDetailsForm.controls['option1Value'].touched">Poll option 1 is required</mat-error>
+                    </mat-form-field>
+                    <label>Votes: {{pollOptionsList.length !== 0 ? pollOptionsList[0].votes.votes_count : 'null'}}, Percentage: {{pollOptionsList.length !== 0 ? pollOptionsList[0].votes.votes_percentage : 'null'}}%</label>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="option2Value">
+                      <input matInput placeholder="Poll Option 2" formControlName="option2Value" required>
+                      <mat-error *ngIf="!viewTextPollDetailsForm.controls['option2Value'].valid && viewTextPollDetailsForm.controls['option2Value'].touched">Poll option 2 is required</mat-error>
+                    </mat-form-field>
+                    <label>Votes: {{pollOptionsList.length !== 0 ? pollOptionsList[1].votes.votes_count : 'null'}}, Percentage: {{pollOptionsList.length !== 0 ? pollOptionsList[1].votes.votes_percentage : 'null'}}%</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!viewTextPollDetailsForm.valid" (click)="updateTextPollDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Image Poll Details Modal Popup -->
+      <div id="viewImagePollDetailsModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View Poll Details</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="viewImagePollDetailsForm">
+                <div class="row">
+                  <!-- Poll Title -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Poll title" formControlName="title" required>
+                      <mat-error *ngIf="!viewImagePollDetailsForm.controls['title'].valid && viewImagePollDetailsForm.controls['title'].touched">Poll title is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <!-- Poll Type -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="post_option_type">
+                      <mat-select placeholder="Poll Type" formControlName="post_option_type">
+                        <mat-option *ngFor="let poll of pollRespTypes" [value]="poll.type">{{poll.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!viewImagePollDetailsForm.controls['post_option_type'].valid && viewImagePollDetailsForm.controls['post_option_type'].touched">Poll status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <!-- Poll End At -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="post_end_at">
+                      <input matInput placeholder="Poll End At" formControlName="post_end_at">
+                      <mat-error *ngIf="!viewImagePollDetailsForm.controls['post_end_at'].valid && viewImagePollDetailsForm.controls['post_end_at'].touched">Poll end at is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <!-- Poll Status -->
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Poll status" formControlName="status" required>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!viewImagePollDetailsForm.controls['status'].valid && viewImagePollDetailsForm.controls['status'].touched">Poll status is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Option1 Image</label>
+                    <input type="file" accept="image/*" formControlName="option1Value" (change)="imageOption0FunAtUpdate($event.target.files)">
+                    <label>Votes: {{pollOptionsList.length !== 0 ? pollOptionsList[0].votes.votes_count : 'null'}}, Percentage: {{pollOptionsList.length !== 0 ? pollOptionsList[0].votes.votes_percentage : 'null'}}%</label>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <label>Option2 Image</label>
+                    <input type="file" accept="image/*" formControlName="option2Value" (change)="imageOption1FunAtUpdate($event.target.files)">
+                    <label>Votes: {{pollOptionsList.length !== 0 ? pollOptionsList[1].votes.votes_count : 'null'}}, Percentage: {{pollOptionsList.length !== 0 ? pollOptionsList[1].votes.votes_percentage : 'null'}}%</label>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <img src="{{viewImagePollDetailsForm.controls['image1URL'].value}}" style="width:100%; height:150px;" />
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <img src="{{viewImagePollDetailsForm.controls['image2URL'].value}}" style="width:100%; height:150px;" />
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!viewImagePollDetailsForm.valid" (click)="updateImagePollDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal Popup -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deletePoll()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

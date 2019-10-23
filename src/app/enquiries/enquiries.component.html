@@ -1,0 +1,163 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for enquiry">
+        </mat-form-field>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>S.No</mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+          
+          <!-- User Name -->
+          <ng-container matColumnDef="user_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>User Name</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.user_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Mobile Number -->
+          <ng-container matColumnDef="mobile">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Mobile</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.mobile == null ? 'NA' : row.mobile}} </mat-cell>
+          </ng-container>
+
+          <!-- Post Title -->
+          <ng-container matColumnDef="post_title">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Post Title</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.post_title}} </mat-cell>
+          </ng-container>
+
+          <!-- Message -->
+          <ng-container matColumnDef="message">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Message</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.message}} </mat-cell>
+          </ng-container>
+
+          <!-- Created On -->
+          <ng-container matColumnDef="created_at">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Created On</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.created_at}} </mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Actions</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewEnquiryDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDeleteEnquiry(row)" title="Delete Enquiry">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[50, 100, 250, 500, 1000, 1500, 2000, 5000]"></mat-paginator>
+      </div>
+
+      <!-- User Details Modal Popup -->
+      <div id="viewEnquiryDetailsModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Enquiry Details</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="enquiryDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- User Name -->
+                    <mat-form-field name="user_name">
+                      <input matInput placeholder="User Name" formControlName="user_name" >
+                      <mat-error *ngIf="!enquiryDetailsForm.controls['user_name'].valid && enquiryDetailsForm.controls['user_name'].touched">User name is required</mat-error>
+                    </mat-form-field>
+                    
+                    <!-- Mobile Number -->
+                    <mat-form-field name="mobile">
+                      <input matInput placeholder="Mobile number" formControlName="mobile" >
+                      <mat-error *ngIf="!enquiryDetailsForm.controls['mobile'].valid && enquiryDetailsForm.controls['mobile'].touched">Mobile number is required</mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Message -->
+                    <mat-form-field name="message">
+                      <input matInput placeholder="Message" formControlName="message" >
+                      <mat-error *ngIf="!enquiryDetailsForm.controls['message'].valid && enquiryDetailsForm.controls['message'].touched">Message is required</mat-error>
+                    </mat-form-field>                    
+
+                    <!-- Created On -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Created On" formControlName="created_at" >
+                      <mat-error *ngIf="!enquiryDetailsForm.controls['created_at'].valid && enquiryDetailsForm.controls['created_at'].touched">Created data is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-12 col-lg-12">
+                    <!-- Post Title -->
+                    <mat-form-field class="example-full-width" name="post_title">
+                      <textarea matInput placeholder="Post Title" title="post_title" formControlName="post_title"></textarea>
+                      <mat-error *ngIf="!enquiryDetailsForm.controls['post_title'].valid && enquiryDetailsForm.controls['post_title'].touched">Post title is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <!-- <button type="button" mat-raised-button color="primary" [disabled]="!enquiryDetailsForm.valid" (click)="addCategory()" data-dismiss="modal">Create</button> -->
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

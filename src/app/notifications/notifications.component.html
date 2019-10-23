@@ -1,0 +1,252 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="example-header category-search">
+                <mat-form-field class="cat-search">
+                    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for notification">
+                </mat-form-field>
+                <button mat-raised-button color="primary" class="cat-button"
+                    (click)="openAddNotifyModal()">Create</button>
+            </div>
+
+            <!-- Prompt Type of Add Modal Popup -->
+            <div class="modal fade" id="promptTypeOfAddModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Confirm</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Select your
+                                    notification choice!!</span></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="warn"
+                                (click)="opengeneralModal()">General</button>
+                            <button type="button" mat-raised-button color="primary"
+                                (click)="openpostModal()">Post</button>
+                            <button type="button" mat-raised-button color="primary"
+                                (click)="openpageModal()">Page</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Notifications Modal -->
+            <div id="addNotificationsModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Create Notifications</h4>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form class="example-form" [formGroup]="addNotificationsForm">
+                                <!-- Notification Message -->
+                                <mat-form-field name="message">
+                                    <input matInput placeholder="Notification Message" formControlName="message"
+                                        required>
+                                    <mat-error
+                                        *ngIf="!addNotificationsForm.controls['message'].valid && addNotificationsForm.controls['message'].touched">
+                                        Notification message is required</mat-error>
+                                </mat-form-field>
+                                <!-- Users To Notify -->
+                                <mat-form-field name="users_id">
+                                    <mat-select placeholder="Select Users" formControlName="users_id" multiple>
+                                        <mat-option #allSelected (click)="toggleAllSelection()" [value]="0">All
+                                        </mat-option>
+                                        <mat-option *ngFor="let user of usersList" [value]="user.id"
+                                            (click)="tosslePerOne(allSelected.viewValue)">{{user.nick_name}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="!addNotificationsForm.controls['users_id'].valid && addNotificationsForm.controls['users_id'].touched">
+                                        Select users you want to notify </mat-error>
+                                </mat-form-field>
+                                <!-- Video URL -->
+                                <mat-form-field name="video_url">
+                                    <input matInput placeholder="Video URL" formControlName="video_url">
+                                    <mat-error
+                                        *ngIf="!addNotificationsForm.controls['video_url'].valid && addNotificationsForm.controls['video_url'].touched">
+                                        Video URL is required</mat-error>
+                                </mat-form-field>
+                                <!-- Notification Image -->
+                                <div name="file">
+                                    <label>Notification Image</label>
+                                    <input type="file" id="notificationImageFileId" accept="image/*"
+                                        formControlName="file" (change)="imageInputFile($event.target.files)">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="primary"
+                                [disabled]="!addNotificationsForm.valid" (click)="sendNotification()"
+                                data-dismiss="modal">Notify</button>
+                            <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="addpostNotificationsModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Create Post Notifications</h4>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form class="example-form" [formGroup]="addpostNotificationsForm">
+                                <!-- Post Names -->
+                                <mat-form-field name="post_id">
+                                    <input matInput formControlName="post_id" readonly>
+                                </mat-form-field>
+                                <mat-form-field class="postTitle" name="post_title">
+                                    <input matInput placeholder="Enter Post Title" formControlName="post_title"
+                                        (input)="onChange($event.target.value)" id="postVal" autocomplete="off"
+                                        required>
+                                    <span class="post_select" *ngIf="sectionVisible == 'false' ? true : false;">
+                                        <mat-option *ngFor="let post of postList" [value]="post.id"
+                                            (click)="seletedPost(post)">{{post.title}}
+                                        </mat-option>
+                                    </span>
+                                    <mat-error
+                                        *ngIf="!addpostNotificationsForm.controls['post_title'].valid && addpostNotificationsForm.controls['post_title'].touched">
+                                        Post Title is required</mat-error>
+                                </mat-form-field>
+
+                                <!-- Users To Notify -->
+                                <mat-form-field name="postusers_id">
+                                    <mat-select placeholder="Select Users" formControlName="postusers_id" multiple>
+                                        <mat-option #allpostSelected (click)="togglepostAllSelection()" [value]="0">All
+                                        </mat-option>
+                                        <mat-option *ngFor="let user of usersList" [value]="user.id"
+                                            (click)="tosslepost(allpostSelected.viewValue)">{{user.nick_name}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="!addpostNotificationsForm.controls['postusers_id'].valid && addpostNotificationsForm.controls['postusers_id'].touched">
+                                        Select users you want to notify </mat-error>
+                                </mat-form-field>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="primary"
+                                [disabled]="!addpostNotificationsForm.valid" (click)="sendPostNotification()"
+                                data-dismiss="modal">Notify</button>
+                            <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Page Notification Modal-->
+            <div id="addpageNotificationsModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Create Page Notifications</h4>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form class="example-form" [formGroup]="addpageNotificationsForm">
+                                <!-- Page Names -->
+                                <mat-form-field name="page_id">
+                                    <mat-select placeholder="Select Page" formControlName="page_id">
+                                        <mat-option *ngFor="let page of pagelist" [value]="page.id">{{page.name}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="!addpageNotificationsForm.controls['page_id'].valid && addpageNotificationsForm.controls['page_id'].touched">
+                                        Select Page you want to notify </mat-error>
+                                </mat-form-field>
+
+                                <!-- Users To Notify -->
+                                <mat-form-field name="pageusers_id">
+                                    <mat-select placeholder="Select Users" formControlName="pageusers_id" multiple>
+                                        <mat-option #allpageSelected (click)="togglepageAllSelection()" [value]="0">All
+                                        </mat-option>
+                                        <mat-option *ngFor="let user of usersList" [value]="user.id"
+                                            (click)="tosslepage(allpageSelected.viewValue)">{{user.nick_name}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-error
+                                        *ngIf="!addpageNotificationsForm.controls['pageusers_id'].valid && addpageNotificationsForm.controls['pageusers_id'].touched">
+                                        Select users you want to notify </mat-error>
+                                </mat-form-field>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="primary"
+                                [disabled]="!addpageNotificationsForm.valid" (click)="sendPageNotification()"
+                                data-dismiss="modal">Notify</button>
+                            <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Message Modal -->
+            <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog  modal-md" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel">Success</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message Popup -->
+            <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-md" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel">Error</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Prompt Modal -->
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Confirm Delete</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete
+                                    category and related data...?</span></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+                            <!-- <button type="button" mat-raised-button color="warn" (click)="deleteCategory()">Yes</button> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

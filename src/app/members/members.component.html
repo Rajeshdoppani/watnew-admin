@@ -1,0 +1,279 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for Members">
+        </mat-form-field>
+        <button mat-raised-button color="primary" class="cat-button" (click)="openCreateMemberModal()">Create</button>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+
+          <!-- ID -->
+          <ng-container matColumnDef="id">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> ID </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.id}} </mat-cell>
+          </ng-container>
+
+          <!-- Package Type -->
+          <ng-container matColumnDef="user_subscription_type">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Package </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.user_subscription_type}} </mat-cell>
+          </ng-container>
+
+          <!-- Name -->
+          <ng-container matColumnDef="name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.name}} </mat-cell>
+          </ng-container>
+
+          <!-- EmailID -->
+          <ng-container matColumnDef="email">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> EamilID </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.email}} </mat-cell>
+          </ng-container>
+
+          <!-- Mobile -->
+          <ng-container matColumnDef="mobile">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Mobile No </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.mobile}} </mat-cell>
+          </ng-container>
+
+          <!-- Description -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.status == '1' ? 'Enabled' : 'Disabled' }}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewmemberDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]"></mat-paginator>
+      </div>
+
+
+      <!-- Add Member Modal Popup -->
+      <div id="addMemberModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Create Member</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="addmemberForm">
+                <!--Package Type-->
+                <mat-form-field name="package_id">
+                  <mat-select placeholder="Select Package" formControlName="package_id" required>
+                    <mat-option>Select Package</mat-option>
+                    <mat-option *ngFor="let data of packageList" [value]="data.id">{{data.subscription_type}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="!addmemberForm.controls['package_id'].valid && addmemberForm.controls['package_id'].touched">
+                    Select Package</mat-error>
+                </mat-form-field>
+
+                <!-- Name -->
+                <mat-form-field name="name">
+                  <input matInput placeholder="Name" formControlName="name" required>
+                  <mat-error *ngIf="!addmemberForm.controls['name'].valid && addmemberForm.controls['name'].touched">
+                    Enter Name</mat-error>
+                </mat-form-field>
+
+                <!-- EmailID -->
+                <mat-form-field name="email">
+                  <input matInput placeholder="EmailID" formControlName="email"
+                    pattern="[a-zA-Z0-9.-_]{1,}@[a-zA-Z.-]{2,}[.]{1}[a-zA-Z]{2,}" required>
+                  <mat-error *ngIf="!addmemberForm.controls['email'].valid && addmemberForm.controls['email'].touched">
+                    Enter EmailID</mat-error>
+                </mat-form-field>
+
+
+                <!-- Mobile -->
+                <mat-form-field name="mobile">
+                  <input matInput placeholder="Mobile No" formControlName="mobile" pattern="^((\\+91-?)|0)?[0-9]{10}$"
+                    maxlength="10" required>
+                  <mat-error
+                    *ngIf="!addmemberForm.controls['mobile'].valid && addmemberForm.controls['mobile'].touched">
+                    Enter Mobile</mat-error>
+                </mat-form-field>
+
+                <!-- Company Name -->
+                <mat-form-field name="company_name">
+                  <input matInput placeholder="Company Name" formControlName="company_name" required>
+                  <mat-error
+                    *ngIf="!addmemberForm.controls['company_name'].valid && addmemberForm.controls['company_name'].touched">
+                    Enter Company Name</mat-error>
+                </mat-form-field>
+
+                <!--Company URL -->
+                <mat-form-field name="company_url">
+                  <input matInput placeholder="Company URL" formControlName="company_url">
+                </mat-form-field>
+
+                <!--Status-->
+                <mat-form-field name="status">
+                  <mat-select placeholder="Select Status" formControlName="status" required>
+                    <mat-option>Select Status</mat-option>
+                    <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                  </mat-select>
+                  <mat-error
+                    *ngIf="!addmemberForm.controls['status'].valid && addmemberForm.controls['status'].touched">
+                    Select status</mat-error>
+                </mat-form-field>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!addmemberForm.valid"
+                (click)="addMember()" data-dismiss="modal">Create</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- View or Update Member Modal-->
+      <div id="viewMemberModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View/Update Member</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-xs-12 col-md-6 col-lg-6">
+                  <form class="example-form" [formGroup]="updatememberForm">
+                    <!--Package Type-->
+                    <mat-form-field name="package_id">
+                      <mat-select placeholder="Select Package" formControlName="package_id" required>
+                        <mat-option>Select Package</mat-option>
+                        <mat-option *ngFor="let data of packageList" [value]="data.id">{{data.subscription_type}}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!updatememberForm.controls['package_id'].valid && updatememberForm.controls['package_id'].touched">
+                        Select Package</mat-error>
+                    </mat-form-field>
+
+                    <!-- Name -->
+                    <mat-form-field name="name">
+                      <input matInput placeholder="Name" formControlName="name" required>
+                      <mat-error
+                        *ngIf="!updatememberForm.controls['name'].valid && updatememberForm.controls['name'].touched">
+                        Enter Name</mat-error>
+                    </mat-form-field>
+
+                    <!-- EmailID -->
+                    <mat-form-field name="email">
+                      <input matInput placeholder="EmailID" formControlName="email"
+                        pattern="[a-zA-Z0-9.-_]{1,}@[a-zA-Z.-]{2,}[.]{1}[a-zA-Z]{2,}" required>
+                      <mat-error
+                        *ngIf="!updatememberForm.controls['email'].valid && updatememberForm.controls['email'].touched">
+                        Enter EmailID</mat-error>
+                    </mat-form-field>
+
+
+                    <!-- Mobile -->
+                    <mat-form-field name="mobile">
+                      <input matInput placeholder="Mobile No" formControlName="mobile"
+                        pattern="^((\\+91-?)|0)?[0-9]{10}$" maxlength="10" required>
+                      <mat-error
+                        *ngIf="!updatememberForm.controls['mobile'].valid && updatememberForm.controls['mobile'].touched">
+                        Enter Mobile</mat-error>
+                    </mat-form-field>
+
+                    <!-- Company Name -->
+                    <mat-form-field name="company_name">
+                      <input matInput placeholder="Company Name" formControlName="company_name" required>
+                      <mat-error
+                        *ngIf="!updatememberForm.controls['company_name'].valid && updatememberForm.controls['company_name'].touched">
+                        Enter Company Name</mat-error>
+                    </mat-form-field>
+
+                    <!--Company URL -->
+                    <mat-form-field name="company_url">
+                      <input matInput placeholder="Company URL" formControlName="company_url">
+                    </mat-form-field>
+
+                    <!--Status-->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Select Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error
+                        *ngIf="!updatememberForm.controls['status'].valid && updatememberForm.controls['status'].touched">
+                        Select status</mat-error>
+                    </mat-form-field>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!updatememberForm.valid"
+                (click)="updateMember()" data-dismiss="modal">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                  aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

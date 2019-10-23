@@ -1,0 +1,254 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for Banners">
+        </mat-form-field>
+        <button mat-raised-button color="primary" class="cat-button" (click)="openCreateBanner()">Create Banner</button>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> S.No </mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+
+          <!-- Title -->
+          <ng-container matColumnDef="title">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Title</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.title}} </mat-cell>
+          </ng-container>
+
+          <!-- URL -->
+          <ng-container matColumnDef="url">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> URL </mat-header-cell>
+            <mat-cell *matCellDef="let row" title="{{row.url}}"> {{row.url}} </mat-cell>
+          </ng-container>
+
+          <!-- Image -->
+          <ng-container matColumnDef="image">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Image </mat-header-cell>
+            <mat-cell *matCellDef="let row"> <img src="{{row.bannerimages[0].path}}" class="cat-image" /> </mat-cell>
+          </ng-container>
+
+          <!-- Created On -->
+          <ng-container matColumnDef="created_at">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Created On </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.created_at}}</mat-cell>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.status == '1' ? 'Enabled' : 'Disabled'}}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewBannerDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDelete(row)" title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100]"></mat-paginator>
+      </div>
+
+      <!-- Add Banner Modal -->
+      <div class="modal fade" id="addBannersModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Create Banner</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="addBannersForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Banner Title -->
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Banner Title" formControlName="title" >
+                      <mat-error *ngIf="!addBannersForm.controls['title'].valid && addBannersForm.controls['title'].touched">Enter banner title</mat-error>
+                    </mat-form-field>
+                    <!-- Banner URL -->
+                    <mat-form-field name="url">
+                      <input matInput placeholder="Banner URL" formControlName="url" >
+                      <mat-error *ngIf="!addBannersForm.controls['url'].valid && addBannersForm.controls['url'].touched">Enter banner url</mat-error>
+                    </mat-form-field>
+                    <!-- Banner Description -->
+                    <mat-form-field name="description">
+                      <input matInput placeholder="Banner Description" formControlName="description" >
+                      <mat-error *ngIf="!addBannersForm.controls['description'].valid && addBannersForm.controls['description'].touched">Enter banner title</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Banner Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Banner Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!addBannersForm.controls['status'].valid && addBannersForm.controls['status'].touched">Select banner status</mat-error>
+                    </mat-form-field>
+                    <!-- Banner Locations -->
+                    <mat-form-field name="locations">
+                      <mat-select placeholder="Select Banner Location" formControlName="locations" multiple required>
+                        <mat-option *ngFor="let locate of locationsList" [value]="locate.id">{{locate.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!addBannersForm.controls['locations'].valid && addBannersForm.controls['locations'].touched">Select banner locations</mat-error>
+                    </mat-form-field>
+                    <!-- Banner Images -->
+                    <div name="image">
+                      <label>Banner Image *</label>
+                      <input type="file" id="addImageFilesId" formControlName="banner_images[0][path]" accept="image/*" (change)="imageInputFileAtAdd($event.target.files)" required>
+                      <label><b>Note:</b> Image width: 890PX, height: 117PX</label>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!addBannersForm.valid" (click)="createBanner()">Create</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Banner Details Modal -->
+      <div class="modal fade" id="viewBannersModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" >View/Update Banner Details</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="viewBannersForm">
+                <div class="row">
+                  <div class="col-xs-12 banner_img">
+                    <img src="{{viewBannersForm.controls['imagePath'].value}}" style="width: 100%; height: 125px;"/>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Banner Title -->
+                    <mat-form-field name="title">
+                      <input matInput placeholder="Banner Title" formControlName="title" >
+                      <mat-error *ngIf="!viewBannersForm.controls['title'].valid && viewBannersForm.controls['title'].touched">Enter banner title</mat-error>
+                    </mat-form-field>
+                    <!-- Banner URL -->
+                    <mat-form-field name="url">
+                      <input matInput placeholder="Banner URL" formControlName="url" >
+                      <mat-error *ngIf="!viewBannersForm.controls['url'].valid && viewBannersForm.controls['url'].touched">Enter banner url</mat-error>
+                    </mat-form-field>
+                    <!-- Banner Description -->
+                    <mat-form-field name="description">
+                      <input matInput placeholder="Banner Description" formControlName="description" >
+                      <mat-error *ngIf="!viewBannersForm.controls['description'].valid && viewBannersForm.controls['description'].touched">Enter banner title</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Banner Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Banner Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!viewBannersForm.controls['status'].valid && viewBannersForm.controls['status'].touched">Select banner status</mat-error>
+                    </mat-form-field>
+                    <!-- Banner Location -->
+                    <mat-form-field name="locations">
+                      <mat-select placeholder="Select Banner Location" formControlName="locations" multiple required>
+                        <mat-option *ngFor="let locate of locationsList" [value]="locate.id">{{locate.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!viewBannersForm.controls['locations'].valid && viewBannersForm.controls['locations'].touched">Select banner location</mat-error>
+                    </mat-form-field>
+                    <!-- Banner Images -->
+                    <div name="image">
+                      <label>Banner Image</label>
+                      <input type="file" id="updateImageFilesId" accept="image/*" (change)="imageInputFileAtUpdate($event.target.files)" >
+                      <label><b>Note:</b> Image width: 890PX, height: 117PX</label>
+                    </div>
+                    <br>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="primary" [disabled]="!viewBannersForm.valid" (click)="updateBannerDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal Popup -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deleteBanner()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

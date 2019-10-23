@@ -1,0 +1,39 @@
+.example-container {
+    width: 100% !important;
+}
+.mat-header-cell {
+    color: #fff;
+    background: #343a40c4;
+    font-weight: bold;
+    padding: 0 10px;
+}
+.mat-column-sno {
+    flex: 0 0 60px;
+}
+.modal-header{
+    background: #343a40c4 !important;
+    padding: 5px 10px !important;
+    border: 1px solid #343a40c4;
+    border-radius: 4px 4px 0 0;
+}
+.modal-title{
+    color: #fff !important;
+}
+.mat-column-actions {
+    flex: 0 0 200px;
+}
+.modal-footer{
+    padding:10px;
+}
+.cat-image {
+    height: 45px !important;
+    width: 45px !important;
+}
+::ng-deep .cdk-overlay-container {
+    position: fixed;
+    z-index: 9999;
+}
+.create-post-button {
+    float: right;
+}
+.k-treeview{height: 175px}

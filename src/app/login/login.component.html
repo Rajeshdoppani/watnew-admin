@@ -1,0 +1,27 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <!--
+    <div class="login-logo">
+      <img src="./../../assets/img/wn-logo.png">
+    </div>
+    -->
+    <div class="card">
+      <div class="card-header card-header-danger">
+        <h4 class="card-title">Welcome to WATNEW Admin Panel</h4>
+        <p class="card-category">Login into your account</p>
+      </div>
+      <div class="card-body">
+        <form class="example-form" [formGroup]="loginForm" (ngSubmit)="loginAuthentication()">
+          <mat-form-field name="email">
+            <input matInput placeholder="Enter your email or mobile number" formControlName="email" required>
+            <mat-error *ngIf="!loginForm.controls['email'].valid && loginForm.controls['email'].touched">Enter valid email or mobile number</mat-error>
+          </mat-form-field>
+          <mat-form-field name="password">
+            <input matInput placeholder="Enter your password" type="password" formControlName="password" required>
+            <mat-error *ngIf="!loginForm.controls['password'].valid && loginForm.controls['password'].touched">Enter your password</mat-error>
+          </mat-form-field>
+          <button type="submit" class="login-btn" mat-raised-button color="primary" title="Login" [disabled]="!loginForm.valid">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>

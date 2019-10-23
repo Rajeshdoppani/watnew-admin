@@ -1,0 +1,182 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for user">
+        </mat-form-field>
+      </div>
+
+      <!-- Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- User Name -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef fxFlex="10px" mat-sort-header>S.No</mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+          
+          <!-- User Name -->
+          <ng-container matColumnDef="nick_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>User Name</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.nick_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Email -->
+          <ng-container matColumnDef="email">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Email Id</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.email == null ? 'NA' : row.email}} </mat-cell>
+          </ng-container>
+
+          <!-- Mobile Number -->
+          <ng-container matColumnDef="mobile">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Mobile Number</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.mobile == null ? 'NA' : row.mobile}} </mat-cell>
+          </ng-container>
+
+          <!-- Verified By -->
+          <ng-container matColumnDef="verified">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Verified By</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.mobile_verify == '1' ? 'Mobile' : row.email_verify == '1' ? 'Email' : 'Not Verified'}} </mat-cell>
+          </ng-container>
+
+          <!-- Source Type -->
+          <ng-container matColumnDef="source_type">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Source Type</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.source_type}} </mat-cell>
+          </ng-container>
+
+          <!-- Created On -->
+          <ng-container matColumnDef="created_at">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Created On</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.created_at}} </mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Actions</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewUserDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="confirmDeleteUser(row)" title="Delete User">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[50, 100, 250, 500, 1000, 1500, 2000, 5000]"></mat-paginator>
+      </div>
+
+      <!-- User Details Modal Popup -->
+      <div id="viewUserModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">User Details</h4>
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="userDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Name -->
+                    <mat-form-field name="nick_name">
+                      <input matInput placeholder="User name" formControlName="nick_name" required>
+                      <mat-error *ngIf="!userDetailsForm.controls['nick_name'].valid && userDetailsForm.controls['nick_name'].touched">User name is required</mat-error>
+                    </mat-form-field>
+                    <!-- Email -->
+                    <mat-form-field name="email">
+                      <input matInput placeholder="Email Id" formControlName="email" required>
+                      <mat-error *ngIf="!userDetailsForm.controls['email'].valid && userDetailsForm.controls['email'].touched">Email is required</mat-error>
+                    </mat-form-field>
+                    <!-- Mobile Number -->
+                    <mat-form-field name="mobile">
+                      <input matInput placeholder="Mobile number" formControlName="mobile">
+                      <mat-error *ngIf="!userDetailsForm.controls['mobile'].valid && userDetailsForm.controls['mobile'].touched">Mobile number is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Source Type -->
+                    <mat-form-field name="source_type">
+                      <input matInput placeholder="Created On" formControlName="source_type">
+                      <mat-error *ngIf="!userDetailsForm.controls['source_type'].valid && userDetailsForm.controls['source_type'].touched">Source is required</mat-error>
+                    </mat-form-field>
+                    <!-- Created On -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Created On" formControlName="created_at">
+                      <mat-error *ngIf="!userDetailsForm.controls['created_at'].valid && userDetailsForm.controls['created_at'].touched">Created on is required</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <!-- <button type="button" mat-raised-button color="primary" [disabled]="!userDetailsForm.valid" (click)="addCategory()" data-dismiss="modal">Create</button> -->
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deleteUser()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

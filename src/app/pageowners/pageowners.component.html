@@ -1,0 +1,270 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="example-header category-search">
+        <mat-form-field class="cat-search">
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for Page Owner">
+        </mat-form-field>
+      </div>
+
+      <!-- Adds Data Table -->
+      <div class="example-container mat-elevation-z8">
+        <mat-table [dataSource]="dataSource" matSort>
+          <!-- S.No -->
+          <ng-container matColumnDef="sno">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> S.No </mat-header-cell>
+            <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+          </ng-container>
+
+          <!-- Name -->
+          <ng-container matColumnDef="nick_name">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Name</mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.nick_name}} </mat-cell>
+          </ng-container>
+
+          <!-- Email -->
+          <ng-container matColumnDef="email">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Email </mat-header-cell>
+            <mat-cell *matCellDef="let row"> {{row.email}} </mat-cell>
+          </ng-container>
+
+          <!-- Mobile -->
+          <ng-container matColumnDef="mobile">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Mobile </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.mobile}}</mat-cell>
+          </ng-container>
+
+          <!-- Source Type -->
+          <ng-container matColumnDef="source_type">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Source </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.source_type}}</mat-cell>
+          </ng-container>
+
+          <!-- Page Title -->
+          <ng-container matColumnDef="page_title">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Page Title </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.pages[0].name}}</mat-cell>
+          </ng-container>
+
+          <!-- Created On -->
+          <ng-container matColumnDef="created_at">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Created On </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.created_at}}</mat-cell>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <button mat-icon-button (click)="viewPageOwnerDetails(row)" title="View">
+                <mat-icon>remove_red_eye</mat-icon>
+              </button>
+              <button mat-icon-button (click)="viewPageDetails(row)" [disabled]="row.pages.length == '0'" title="View Page">
+                <mat-icon>find_in_page</mat-icon>
+              </button>
+              <button mat-icon-button title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+        <mat-paginator [pageSizeOptions]="[25, 50, 100, 250, 500, 1000]"></mat-paginator>
+      </div>
+
+      <!-- View Page Owner Details Modal -->
+      <div class="modal fade" id="viewPageOwnerDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View/Update Page Owner Details</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="pageOwnerDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Name -->
+                    <mat-form-field name="nick_name">
+                      <input matInput placeholder="Owner Name" formControlName="nick_name">
+                      <mat-error *ngIf="!pageOwnerDetailsForm.controls['nick_name'].valid && pageOwnerDetailsForm.controls['nick_name'].touched">Enter owner name</mat-error>
+                    </mat-form-field>
+                    <!-- Email -->
+                    <mat-form-field name="email">
+                      <input matInput placeholder="Email Address" formControlName="email">
+                      <mat-error *ngIf="!pageOwnerDetailsForm.controls['email'].valid && pageOwnerDetailsForm.controls['email'].touched">Enter email address</mat-error>
+                    </mat-form-field>
+                    <!-- Mobile -->
+                    <mat-form-field name="mobile">
+                      <input matInput placeholder="Mobile Number" formControlName="mobile">
+                      <mat-error *ngIf="!pageOwnerDetailsForm.controls['mobile'].valid && pageOwnerDetailsForm.controls['mobile'].touched">Enter mobile number</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Source Type -->
+                    <mat-form-field name="source_type">
+                      <input matInput placeholder="Source Type" formControlName="source_type">
+                      <mat-error *ngIf="!pageOwnerDetailsForm.controls['source_type'].valid && pageOwnerDetailsForm.controls['source_type'].touched">Enter updated date</mat-error>
+                    </mat-form-field>
+                    <!-- Created At -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Created On" formControlName="created_at">
+                      <mat-error *ngIf="!pageOwnerDetailsForm.controls['created_at'].valid && pageOwnerDetailsForm.controls['created_at'].touched">Enter created date</mat-error>
+                    </mat-form-field>
+                    <!-- Updated At -->
+                    <mat-form-field name="updated_at">
+                      <input matInput placeholder="Updated On" formControlName="updated_at" required>
+                      <mat-error *ngIf="!pageOwnerDetailsForm.controls['updated_at'].valid && pageOwnerDetailsForm.controls['updated_at'].touched">Enter updated date</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <!-- <button type="button" mat-raised-button color="primary" [disabled]="!pageOwnerDetailsForm.valid" (click)="createAdd()">Create</button> -->
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Page Details Modal -->
+      <div class="modal fade" id="viewPageDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">View/Update Page Details</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <form class="example-form" [formGroup]="pageDetailsForm">
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <div class="row">
+                      <div class="col-xs-12 col-md-6 col-lg-6">
+                        <label> Cover Photo</label>
+                        <img src="{{pageDetailsForm.controls['page_header'].value}}" style="width: 100%; height: 160px;">
+                      </div>
+                      <div class="col-xs-12 col-md-6 col-lg-6">
+                        <label>Page Icon</label>
+                        <img src="{{pageDetailsForm.controls['page_icon'].value}}" style="width: 100%; height: 160px;">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Page Status -->
+                    <mat-form-field name="status">
+                      <mat-select placeholder="Page Status" formControlName="status" required>
+                        <mat-option>Select Status</mat-option>
+                        <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="!pageDetailsForm.controls['status'].valid && pageDetailsForm.controls['status'].touched">Select page status</mat-error>
+                    </mat-form-field>
+                    <!-- Created At -->
+                    <mat-form-field name="created_at">
+                      <input matInput placeholder="Created On" formControlName="created_at" required>
+                      <mat-error *ngIf="!pageDetailsForm.controls['created_at'].valid && pageDetailsForm.controls['created_at'].touched">Enter created date</mat-error>
+                    </mat-form-field>
+                    <!-- Updated At -->
+                    <mat-form-field name="updated_at">
+                      <input matInput placeholder="Updated On" formControlName="updated_at" required>
+                      <mat-error *ngIf="!pageDetailsForm.controls['updated_at'].valid && pageDetailsForm.controls['updated_at'].touched">Enter updated date</mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <!-- Page Name -->
+                    <mat-form-field name="name">
+                      <input matInput placeholder="Page Name" formControlName="name" required>
+                      <mat-error *ngIf="!pageDetailsForm.controls['name'].valid && pageDetailsForm.controls['name'].touched">Enter page name</mat-error>
+                    </mat-form-field>
+                    <!-- About Page -->
+                    <mat-form-field name="about">
+                      <input matInput placeholder="About Page" formControlName="about" required>
+                      <mat-error *ngIf="!pageDetailsForm.controls['about'].valid && pageDetailsForm.controls['about'].touched">Enter about page</mat-error>
+                    </mat-form-field>
+                  </div>
+                  <div class="col-xs-12 col-md-6 col-lg-6">
+                    <div>                      
+                      <span><b>Cover Photo</b></span>
+                      <input type="file" id="updateCoverPhotoID" value="" accept="image/*" (change)="coverPhotoAtUpdate($event.target.files)" required>
+                    </div>
+                    <!-- Page Icon Input -->
+                    <div>
+                      <span><b>Page Icon</b></span>
+                      <input type="file" id="updatePageIconID" value="" accept="image/*" (change)="pageIconAtUpdate($event.target.files)" required>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="warn" (click)="confirmDeletePage()">Delete</button>
+              <button type="button" mat-raised-button color="primary" [disabled]="!pageDetailsForm.valid" (click)="updatePageDetails()">Update</button>
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message Modal -->
+      <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog  modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Success</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Error Message Popup -->
+      <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title" id="myModalLabel">Error</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Prompt Modal Popup -->
+      <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Delete</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+              <button type="button" mat-raised-button color="warn" (click)="deleteOwnerPage()">Yes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

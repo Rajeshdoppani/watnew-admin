@@ -1,0 +1,228 @@
+<div class="main-content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="example-header category-search">
+          <mat-form-field class="cat-search">
+            <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Search for pages">
+          </mat-form-field>
+        </div>
+  
+        <!-- Data Table -->
+        <div class="example-container mat-elevation-z8">
+          <mat-table [dataSource]="dataSource" matSort>
+            <!-- S.No -->
+            <ng-container matColumnDef="sno">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> S.No </mat-header-cell>
+              <mat-cell *matCellDef="let row; let i = dataIndex;"> {{dataSource.filteredData.indexOf(row) + 1}} </mat-cell>
+            </ng-container>
+  
+            <!-- Name -->
+            <ng-container matColumnDef="name">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Name</mat-header-cell>
+              <mat-cell *matCellDef="let row"> {{row.name}} </mat-cell>
+            </ng-container>
+  
+            <!-- Page Icon -->
+            <ng-container matColumnDef="page_icon">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Page Icon </mat-header-cell>
+              <mat-cell *matCellDef="let row"> <img src="https://watnew.com/rest/public/{{row.page_icon}}" class="cat-image" /> </mat-cell>
+            </ng-container>
+  
+            <!-- Page Header -->
+            <ng-container matColumnDef="page_header">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Cover Photo </mat-header-cell>
+              <mat-cell *matCellDef="let row"> <img src="https://watnew.com/rest/public/{{row.page_header}}" class="cat-image" /> </mat-cell>
+            </ng-container>
+  
+            <!-- Status -->
+            <ng-container matColumnDef="status">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Status </mat-header-cell>
+              <mat-cell *matCellDef="let row">{{row.status == '1' ? 'Enabled' : 'Disabled'}}</mat-cell>
+            </ng-container>
+
+            <!-- Comments Status -->
+            <ng-container matColumnDef="comments">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Comments </mat-header-cell>
+              <mat-cell *matCellDef="let row">{{row.page_comment_status == 'false' ? 'Enabled' : 'Disabled'}}</mat-cell>
+            </ng-container>
+
+            <!-- Courtesy Status -->
+            <ng-container matColumnDef="courtesy">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Courtesy </mat-header-cell>
+              <mat-cell *matCellDef="let row">{{row.courtesy_status == 'false' ? 'Enabled' : 'Disabled'}}</mat-cell>
+            </ng-container>
+  
+            <!-- In Home Page -->
+            <ng-container matColumnDef="homepage">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Home Page </mat-header-cell>
+              <mat-cell *matCellDef="let row">{{row.show_in_homepage == '0' ? 'No' : 'Yes'}}</mat-cell>
+            </ng-container>
+
+            <!-- Default Page -->
+          <ng-container matColumnDef="default_follow">
+            <mat-header-cell *matHeaderCellDef mat-sort-header> Default Page </mat-header-cell>
+            <mat-cell *matCellDef="let row">{{row.default_follow == '0' ? 'No' : 'Yes'}}</mat-cell>
+          </ng-container>
+   
+            <!-- Actions -->
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef mat-sort-header> Actions </mat-header-cell>
+              <mat-cell *matCellDef="let row">
+                <button mat-icon-button (click)="viewPageDetails(row)" title="View">
+                  <mat-icon>remove_red_eye</mat-icon>
+                </button>
+                <button mat-icon-button (click)="enableOrDisableComments(row.id, row.page_comment_status)" title="Enable or Disable comments">
+                  <mat-icon>comments</mat-icon>
+                </button>
+                <button mat-icon-button (click)="enableOrDisableCourtesy(row.id, row.courtesy_status)" title="Enable or disable courtesy">
+                  <mat-icon>new_releases</mat-icon>
+                </button>
+                <button mat-icon-button (click)="makeAsDefaultPage(row.id, row.default_follow)" title="Make page as default follow">
+                  <mat-icon>publish</mat-icon>
+                </button>
+                <button mat-icon-button (click)="confirmPageDelete(row)" title="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+            
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+          <mat-paginator [pageSizeOptions]="[25, 50, 100, 250, 500, 1000]"></mat-paginator>
+        </div>
+  
+        <!-- Page Details Modal Popup -->
+        <div id="viewPageDetailsModal" class="modal fade" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Page Details</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form class="example-form" [formGroup]="pageDetailsForm">
+                  <div class="row">
+                    <div class="col-xs-12 col-md-6 col-lg-6">
+                      <!-- Page Name -->
+                      <mat-form-field name="name">
+                        <input matInput placeholder="Name" formControlName="name" required>
+                        <mat-error *ngIf="!pageDetailsForm.controls['name'].valid && pageDetailsForm.controls['name'].touched">Page name is required</mat-error>
+                      </mat-form-field>
+  
+                      <!-- About Page -->
+                      <mat-form-field name="about">
+                        <input matInput placeholder="About" formControlName="about" required>
+                        <mat-error *ngIf="!pageDetailsForm.controls['about'].valid && pageDetailsForm.controls['about'].touched">About page is required</mat-error>
+                      </mat-form-field>
+  
+                      <!-- Page Status -->
+                      <mat-form-field name="status">
+                        <mat-select placeholder="Select Status" formControlName="status" required>
+                          <mat-option>Select Status</mat-option>
+                          <mat-option *ngFor="let status of statusList" [value]="status.id">{{status.name}}</mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="!pageDetailsForm.controls['status'].valid && pageDetailsForm.controls['status'].touched">Select page status</mat-error>
+                      </mat-form-field>
+  
+                      <!-- In Home Page -->
+                      <mat-form-field name="show_in_homepage">
+                        <mat-select placeholder="In Home Page" formControlName="show_in_homepage" required>
+                          <mat-option>Show In Home Page</mat-option>
+                          <mat-option *ngFor="let inHome of inHomePageList" [value]="inHome.id">{{inHome.name}}</mat-option>
+                        </mat-select>
+                        <mat-error *ngIf="!pageDetailsForm.controls['show_in_homepage'].valid && pageDetailsForm.controls['show_in_homepage'].touched">In home page is required</mat-error>
+                      </mat-form-field>
+                      <!-- Cover Photo -->
+                      <div name="image">
+                        <label>Cover Photo</label>
+                        <input type="file" id="coverPhotoFileId" accept="image/*" (change)="coverPhotoFileInput($event.target.files)" required>
+                      </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6 col-lg-6">
+                      <!-- Cover Photo & Page Icon -->
+                      <div class="row">
+                        <div class="col-xs-12 col-md-6 col-lg-6">
+                          <label> Cover Photo</label>
+                          <img src="https://watnew.com/rest/public/{{pageDetailsForm.controls['page_header'].value}}" style="width: 100%; height: 150px;">
+                        </div>
+                        <div class="col-xs-12 col-md-6 col-lg-6">
+                          <label>Page Icon</label>
+                          <img src="https://watnew.com/rest/public/{{pageDetailsForm.controls['page_icon'].value}}" style="width: 100%; height: 150px;">
+                        </div>
+                      </div>
+                      <!-- Page Icon -->
+                      <div name="image">
+                        <label style="display: block; margin-top: 10px;">Page Icon</label>
+                        <input type="file" id="pageIconFileId" accept="image/*" (change)="pageIconFileInput($event.target.files)" required>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" mat-raised-button color="primary" [disabled]="!pageDetailsForm.valid" (click)="updatePageDetails()" data-dismiss="modal">Update</button>
+                <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Success Message Modal -->
+        <div class="modal fade" id="successMessageModal" tabindex="-1" role="dialog">
+          <div class="modal-dialog  modal-md" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Success</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              </div>
+              <div class="modal-body">
+                <p><i class="fa fa-check fa-2x" style="color:green"></i><span> {{successMessage}}</span></p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Error Message Popup -->
+        <div class="modal fade" id="errorMessageModal" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Error</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              </div>
+              <div class="modal-body">
+                <p><i class="fa fa-times fa-2x" style="color:red"></i><span> {{errorMessage}}</span></p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" mat-raised-button color="default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Delete Prompt Modal -->
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Confirm Delete</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              </div>
+              <div class="modal-body">
+                <p><i class="fa fa-warning fa-2x" style="color:orange"></i><span> Are you sure to delete...?</span></p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" mat-raised-button color="default" data-dismiss="modal">No</button>
+                <button type="button" mat-raised-button color="warn" (click)="deletePage()">Yes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+      </div>
+    </div>
+  </div>
