@@ -34,7 +34,7 @@
     "@progress/kendo-angular-intl": "^1.7.0",
     "@progress/kendo-angular-l10n": "^1.4.0",
     "@progress/kendo-angular-treeview": "^3.1.1",
-    "ajv": "6.4.0",
+    "ajv": "6.12.3",
     "angular2-datetimepicker": "^1.1.1",
     "arrive": "2.4.1",
     "bootstrap": "4.1.0",
